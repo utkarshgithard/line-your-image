@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mathematical Line Art Studio | Stroke-by-Stroke Drawing</title>
+  <meta name="description" content="Watch mathematical algorithms reconstruct images stroke by stroke using adaptive straight lines, structure tensors, and crosshatching.">
+  
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/index.css?v=3">
+</head>
+<body>
+  <!-- Top Application Bar -->
+  <header class="app-header">
+    <div class="logo-area">
+      <div class="logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="21" x2="21" y2="3"></line>
+          <line x1="3" y1="13" x2="13" y2="3"></line>
+          <line x1="11" y1="21" x2="21" y2="11"></line>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <h1>LinesDraw <span>Studio</span></h1>
+        <p class="tagline">Mathematical Line Art Reconstruction</p>
+      </div>
+    </div>
+
+    <!-- Live Status Pill -->
+    <div class="header-status">
+      <span class="status-indicator" id="statusIndicator"></span>
+      <span id="statusMessage">Ready for Image Upload</span>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <button id="soundToggleBtn" class="icon-btn" title="Toggle Pen Sound Effects">
+        <svg id="soundOnIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <svg id="soundOffIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+        <span class="btn-label">Plotter Sound</span>
+      </button>
+
+      <button id="downloadHighResBtn" class="btn btn-primary" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export PNG
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Studio Workspace -->
+  <main class="studio-layout">
+    
+    <!-- Left Sidebar: Controls & Upload -->
+    <aside class="sidebar-panel">
+      <!-- 1. Upload Zone -->
+      <section class="panel-section">
+        <h2 class="section-title">1. Input Image</h2>
+        <div id="dropZone" class="drop-zone">
+          <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
+          <div class="drop-zone-content">
+            <div class="upload-icon-circle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <p class="drop-prompt"><strong>Click to upload</strong> or drag & drop</p>
+            <span class="file-types">PNG, JPG, JPEG, WEBP</span>
+          </div>
+        </div>
+
+        <!-- Quick Sample Benchmarks -->
+        <div class="quick-samples">
+          <span class="samples-label">Or try a benchmark:</span>
+          <div class="sample-pills">
+            <button class="sample-pill-btn" data-sample="portrait">Portrait</button>
+            <button class="sample-pill-btn" data-sample="landscape">Landscape</button>
+            <button class="sample-pill-btn" data-sample="logo">Emblem Logo</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Style & Math Settings -->
+      <section class="panel-section">
+        <h2 class="section-title">2. Reconstruction Style</h2>
+        <div class="style-selector-grid">
+          <label class="style-card selected" data-style="adaptive">
+            <input type="radio" name="artStyle" value="adaptive" checked>
+            <div class="style-card-body">
+              <span class="style-name">Adaptive</span>
+              <span class="style-desc">Contour-guided flow</span>
+            </div>
+          </label>
+          <label class="style-card" data-style="engraving">
+            <input type="radio" name="artStyle" value="engraving">
+            <div class="style-card-body">
+              <span class="style-name">Engraving</span>
+              <span class="style-desc">Classic banknote diagonals</span>
+            </div>
+          </label>
+          <label class="style-card" data-style="crosshatch">
+            <input type="radio" name="artStyle" value="crosshatch">
+            <div class="style-card-body">
+              <span class="style-name">Crosshatch</span>
+              <span class="style-desc">Crisp orthogonal grid</span>
+            </div>
+          </label>
+          <label class="style-card" data-style="contour">
+            <input type="radio" name="artStyle" value="contour">
+            <div class="style-card-body">
+              <span class="style-name">Contour</span>
+              <span class="style-desc">Isophote tangents</span>
+            </div>
+          </label>
+          <label class="style-card" data-style="minimalist">
+            <input type="radio" name="artStyle" value="minimalist">
+            <div class="style-card-body">
+              <span class="style-name">Minimalist</span>
+              <span class="style-desc">Fewest clear lines (OMP)</span>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- 3. Mathematical Parameters -->
+      <section class="panel-section">
+        <h2 class="section-title">3. Mathematical Parameters</h2>
+        <div class="parameter-sliders">
+          <!-- Line Budget (Minimalist Mode) -->
+          <div class="param-row" id="lineBudgetRow">
+            <div class="param-label-row">
+              <label for="budgetSlider">Target Line Budget (1000 - 3000)</label>
+              <span id="budgetVal" class="param-val">2,000 lines</span>
+            </div>
+            <input type="range" id="budgetSlider" min="1000" max="3000" step="100" value="2000">
+          </div>
+
+          <!-- Gamma -->
+          <div class="param-row">
+            <div class="param-label-row">
+              <label for="gammaSlider">Darkness Gamma (γ)</label>
+              <span id="gammaVal" class="param-val">1.2</span>
+            </div>
+            <input type="range" id="gammaSlider" min="0.6" max="2.4" step="0.1" value="1.2">
+          </div>
+
+          <!-- Max Density -->
+          <div class="param-row">
+            <div class="param-label-row">
+              <label for="densitySlider">Max Line Density (ρ_max)</label>
+              <span id="densityVal" class="param-val">0.08</span>
+            </div>
+            <input type="range" id="densitySlider" min="0.03" max="0.15" step="0.01" value="0.08">
+          </div>
+
+          <!-- Base Spacing -->
+          <div class="param-row">
+            <div class="param-label-row">
+              <label for="spacingSlider">Base Spacing</label>
+              <span id="spacingVal" class="param-val">12 px</span>
+            </div>
+            <input type="range" id="spacingSlider" min="7" max="22" step="1" value="12">
+          </div>
+
+          <!-- Stroke Width with Direct Regulation Buttons -->
+          <div class="param-row">
+            <div class="param-label-row">
+              <label for="widthSlider">Line Stroke Width</label>
+              <span id="widthVal" class="param-val">0.7 px</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" id="btnDecreaseWidth" class="btn-step" title="Decrease stroke width (Thinner lines)">−</button>
+              <input type="range" id="widthSlider" min="0.3" max="2.0" step="0.05" value="0.7" style="flex: 1;">
+              <button type="button" id="btnIncreaseWidth" class="btn-step" title="Increase stroke width (Thicker lines)">+</button>
+            </div>
+            <!-- Preset Regulation Buttons -->
+            <div class="width-presets" style="display: flex; gap: 6px; margin-top: 8px;">
+              <button type="button" class="btn-preset active" data-width="0.4">Hairline (0.4px)</button>
+              <button type="button" class="btn-preset selected" data-width="0.7">Fine (0.7px)</button>
+              <button type="button" class="btn-preset" data-width="1.0">Medium (1.0px)</button>
+              <button type="button" class="btn-preset" data-width="1.4">Bold (1.4px)</button>
+            </div>
+          </div>
+        </div>
+
+
+        <button id="recomputeBtn" class="btn btn-secondary full-width" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Recompute Lines
+        </button>
+      </section>
+
+      <!-- 4. Mathematical Analysis Info Box -->
+      <section class="panel-section info-section">
+        <h2 class="section-title">4. Real-Time Math Telemetry</h2>
+        <div class="telemetry-grid">
+          <div class="telemetry-card">
+            <span class="telemetry-label">Lines Generated</span>
+            <span id="statLinesCount" class="telemetry-num">—</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Mean Darkness</span>
+            <span id="statDarkness" class="telemetry-num">—</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Edge Feature Coverage</span>
+            <span id="statEdgeCoverage" class="telemetry-num">—</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="telemetry-label">Calculation Time</span>
+            <span id="statCalcTime" class="telemetry-num">—</span>
+          </div>
+          <div class="telemetry-card full-span" id="faceAwareCard" style="display: none; grid-column: span 2; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25);">
+            <span class="telemetry-label" style="color: #38bdf8;">👤 Face-Aware Processing</span>
+            <span id="statFaceAware" style="font-size: 0.8rem; color: #e2e8f0; font-weight: 500; display: block; margin-top: 4px;">Active: Eyes, Brows, Nose, Lips, Jawline Prioritized</span>
+          </div>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- Center Stage: The Paper Drawing Sheet Canvas & Overlay -->
+    <section class="canvas-stage">
+      
+      <!-- View mode toggles -->
+      <div class="stage-toolbar">
+        <div class="view-toggles">
+          <button class="view-btn active" data-view="sheet">Drawing Sheet</button>
+          <button class="view-btn" data-view="split">Split Preview</button>
+          <button class="view-btn" data-view="overlay">Ghost Overlay</button>
+        </div>
+        <div class="zoom-indicator">
+          <span>Scale: 100%</span>
+        </div>
+      </div>
+
+      <!-- Virtual Paper Container -->
+      <div class="sheet-viewport" id="sheetViewport">
+        <!-- The Sheet -->
+        <div class="paper-sheet" id="paperSheet">
+          
+          <!-- Background reference images (hidden by default unless toggled) -->
+          <img id="refImage" class="reference-layer" alt="Original Reference">
+          <img id="grayImage" class="reference-layer" alt="Grayscale Reference">
+
+          <!-- The HTML5 Drawing Canvas -->
+          <canvas id="drawingCanvas"></canvas>
+
+          <!-- Interactive Pen Tip Cursor -->
+          <div id="penCursor" class="pen-cursor">
+            <div class="pen-glow"></div>
+            <div class="pen-dot"></div>
+          </div>
+
+          <!-- Empty Canvas Placeholder -->
+          <div id="emptyPlaceholder" class="empty-placeholder">
+            <div class="placeholder-graphic">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+            </div>
+            <h3>Pure White Canvas Sheet</h3>
+            <p>Upload an image or pick a benchmark above to watch the mathematical function draw lines one by one.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stroke-by-Stroke Transport Control Bar -->
+      <div class="transport-dock">
+        <!-- Scrub Timeline -->
+        <div class="timeline-row">
+          <div class="timeline-info">
+            <span class="progress-label">Drawing Progress:</span>
+            <span id="currentStrokeNum" class="stroke-num">0</span> / <span id="totalStrokeNum" class="stroke-total">0</span> lines
+            (<span id="progressPercent" class="stroke-pct">0.0%</span>)
+          </div>
+          <div class="scrub-container">
+            <input type="range" id="progressScrubber" min="0" max="100" value="0" step="1" disabled>
+          </div>
+        </div>
+
+        <!-- Action Buttons & Speed -->
+        <div class="transport-controls-row">
+          <div class="transport-buttons">
+            <!-- Restart -->
+            <button id="btnRestart" class="transport-btn" title="Restart Drawing (R)" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 19 2 12 11 5 11 19"></polygon>
+                <polygon points="22 19 13 12 22 5 22 19"></polygon>
+              </svg>
+            </button>
+
+            <!-- Play / Pause -->
+            <button id="btnPlayPause" class="transport-btn main-play-btn" title="Play/Pause (Space)" disabled>
+              <svg id="playIcon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <svg id="pauseIcon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+              </svg>
+            </button>
+
+            <!-- Step +1 -->
+            <button id="btnStep" class="transport-btn" title="Draw Next Single Line" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                <line x1="19" y1="5" x2="19" y2="19"></line>
+              </svg>
+            </button>
+
+            <!-- Complete Instantly -->
+            <button id="btnFastForward" class="transport-btn" title="Complete Drawing Instantly" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="13 17 18 12 13 7"></polyline>
+                <polyline points="6 17 11 12 6 7"></polyline>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Speed Slider -->
+          <div class="speed-slider-group">
+            <span class="speed-icon">⚡</span>
+            <label for="speedSlider">Drawing Speed:</label>
+            <input type="range" id="speedSlider" min="1" max="100" value="4" step="1">
+            <span id="speedValueLabel" class="speed-label">4 lines/frame</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Script -->
+  <script src="/static/app.js?v=3"></script>
+</body>
+</html>
